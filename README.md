@@ -2,7 +2,7 @@
 
 Un tablero Kanban interactivo y profesional con arquitectura desacoplada (Full-Stack). El proyecto cuenta con un backend robusto para la persistencia de datos y un frontend dinámico que implementa las mejores prácticas del ecosistema moderno.
 
-![Preview del Tablero](./gashboard.png) 
+![Preview del Tablero](./dashboard.png) 
 
 ## 🛠️ Stack Tecnológico
 
