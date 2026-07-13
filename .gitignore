@@ -1,0 +1,17 @@
+# Frontend (React / Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local
+
+# Backend (Laravel)
+backend/vendor/
+backend/.env
+backend/bootstrap/cache/
+backend/storage/*.key
+backend/public/storage
+
+# Sistema y Editores
+.DS_Store
+.vscode/
+.idea/
