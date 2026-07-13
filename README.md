@@ -48,7 +48,7 @@ npm install
 Crea un archivo .env.local en la raíz de la carpeta del frontend y añade la URL de tu API:
 
 ```text
-VITE_API_BASE_URL=[http://127.0.0.1:8000/api](http://127.0.0.1:8000/api)
+VITE_API_BASE_URL=http://127.0.0.1:8000/api
 ```
 
 Finalmente, arranca el servidor de desarrollo:
