@@ -37,16 +37,19 @@ cp .env.example .env  # Configura tus credenciales de MySQL aquí
 php artisan key:generate
 php artisan migrate
 php artisan serve
+```
 
 ### 2. Configuración del Frontend (`task-manager-front`)
 ```bash
 cd task-manager-front
 npm install
+```
 
 Crea un archivo .env.local en la raíz de la carpeta del frontend y añade la URL de tu API:
 
-```Fragmento de código
+```text
 VITE_API_BASE_URL=[http://127.0.0.1:8000/api](http://127.0.0.1:8000/api)
+```
 
 Finalmente, arranca el servidor de desarrollo:
 ```bash
