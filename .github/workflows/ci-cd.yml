@@ -18,7 +18,7 @@ jobs:
   # =========================================================================
   backend-ci:
     name: Backend CI (Laravel)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     # Fijamos la carpeta de trabajo para no repetir "cd task-manager-api"
     defaults:
@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - name: 1. Descargar el código del repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 2. Configurar PHP 8.2 y extensiones
         uses: shivammathur/setup-php@v2
@@ -52,7 +52,7 @@ jobs:
   # =========================================================================
   frontend-ci:
     name: Frontend CI (React + TS)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     defaults:
       run:
@@ -60,10 +60,10 @@ jobs:
 
     steps:
       - name: 1. Descargar el código del repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 2. Configurar Node.js 22 con caché de npm
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: 'npm'
@@ -83,32 +83,22 @@ jobs:
   # =========================================================================
   docker-cd:
     name: Docker Build & Push (GHCR)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # IMPORTANTE: Este job SOLO corre si backend-ci y frontend-ci terminaron en verde
     needs: [backend-ci, frontend-ci]
 
     steps:
       - name: 1. Descargar el código del repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: 2. Iniciar sesión en GitHub Container Registry (GHCR)
+      - name: 2. Construir imágenes Docker (Backend y Frontend)
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/kanban-api:latest ./task-manager-api
+          docker build -t ghcr.io/${{ github.repository_owner }}/kanban-front:latest ./task-manager-front
+
+      - name: 3. Iniciar sesión y publicar imágenes en GHCR (solo en rama main)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 3. Construir (y publicar en main) imagen Docker del Backend
-        uses: docker/build-push-action@v6
-        with:
-          context: ./task-manager-api
-          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/${{ github.repository_owner }}/kanban-api:latest
-
-      - name: 4. Construir (y publicar en main) imagen Docker del Frontend
-        uses: docker/build-push-action@v6
-        with:
-          context: ./task-manager-front
-          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/${{ github.repository_owner }}/kanban-front:latest
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker push ghcr.io/${{ github.repository_owner }}/kanban-api:latest
+          docker push ghcr.io/${{ github.repository_owner }}/kanban-front:latest
