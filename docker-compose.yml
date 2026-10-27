@@ -1,0 +1,78 @@
+services:
+  # ==========================================
+  # 1. Servicio de Base de Datos (MySQL 8.0)
+  # ==========================================
+  db:
+    image: mysql:8.0
+    container_name: kanban-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: kanban_db
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: kanban_user
+      MYSQL_PASSWORD: secret_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ==========================================
+  # 2. Servicio de Backend (Laravel API)
+  # ==========================================
+  api:
+    build:
+      context: ./task-manager-api
+      dockerfile: Dockerfile
+    container_name: kanban-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      APP_NAME: "Kanban Task Manager"
+      APP_ENV: local
+      APP_KEY: base64:2fl+Ktvkfl+Fuz4Qp/A75G2RTiWVA/ZoKZvp6fiiM10=
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      DB_CONNECTION: mysql
+      # ¡IMPORTANTE! DB_HOST no es 127.0.0.1, sino el nombre del servicio ("db")
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: kanban_db
+      DB_USERNAME: kanban_user
+      DB_PASSWORD: secret_password
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "php artisan migrate --force &&
+             php artisan serve --host=0.0.0.0 --port=8000"
+
+  # ==========================================
+  # 3. Servicio de Frontend (React + Nginx)
+  # ==========================================
+  front:
+    build:
+      context: ./task-manager-front
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost:8000/api
+    container_name: kanban-front
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+# ==========================================
+# Volúmenes persistentes
+# ==========================================
+volumes:
+  db_data:
